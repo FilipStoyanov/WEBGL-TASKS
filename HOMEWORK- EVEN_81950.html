@@ -1,0 +1,219 @@
+﻿	<!DOCTYPE html>
+
+<head>
+	<meta charset="utf-8"/>
+	<title>Шарнирен робот</title>
+
+	<script src="webgl-fmi.js"></script>
+	<script src="shaders.js"></script>
+	<script src="skeleton.js"></script>
+	
+	<script>
+		function start( )
+		{
+			var	canvas = document.getElementById("picasso");
+			canvas.addEventListener('webglcontextlost',function(event){event.preventDefault();},false);
+			canvas.addEventListener('webglcontextrestored',function(){init();},false);
+
+			init();
+			drawFrame();
+		}
+		
+		function init()
+		{
+			gl = getContext("picasso");
+			glprog = getProgram(vShader,fShader);
+			getVariables();
+
+			gl.enable(gl.DEPTH_TEST);
+			gl.clearColor(0,0,0,0);
+
+			identity();
+			perspective(30,gl.canvas.width/gl.canvas.height,1,40000);
+			gl.uniform1i(uUseNormalMatrix,false);
+
+			gl.uniform3f(uAmbientColor,0.3,0.3,0.3);
+			gl.uniform3f(uDiffuseColor,1,1,1);
+			gl.uniform3f(uLightDir,0,0,-1);
+
+			// дефиниране на кост 1
+            bone=[];
+			base1 = new Cylinder([0,-1,-0],3,0.2); 
+			base1.color=[0.6,0.6,0.6];
+			
+			//var a = new Cuboid([0,-1,0],[2,0.5,4]); a.offset=[0,0,0.5];
+			b = new Cylinder([0,-0.5,0.001],0.4,2); //b.offset=[0,0,0];
+			b.color=base1.color;
+			bone[0] = new Bone(3,[b]);
+
+			// дефиниране на кост 2
+			a = new Cuboid([0.5,0,-0.75],[1,1,0.5]);//a.offset=[0,0,-1.5]; 
+			a.color = [0.7,0.7,0.5];
+			
+			bone[1] = new Bone(0.01,[a]);
+           
+			b=new Cylinder([0.50,-0.75,-0.3],0.4,1.5);
+
+			b.rot=[0,90,0];
+			b.color=[0.4,0.4,0.4];
+			
+           // bone[2]=new Bone(1,[b]);
+			a=new Cylinder([0.50,-0.75,1.5],0.4,1.5);
+			a.rot=[0,90,0];
+			a.color=b.color;
+			
+			c1=new Cylinder([0.5,-0.76,-0.3],0.41,0.1);
+			c1.rot=[0,90,0];
+			c1.color=[0.3,0,1];
+			
+			c2=new Cylinder([0.5,0.76,-0.3],0.41,0.1);
+			c2.rot=[0,90,0];
+			c2.color=[0.3,0,1];
+			
+			d1=new Cylinder([0.5,-0.76,1.5],0.41,0.1);
+			d1.rot=[0,90,0];
+			d1.color=[0.3,0,1];
+			
+			d2=new Cylinder([0.5,0.76,1.5],0.41,0.1);
+			d2.rot=[0,90,0];
+			d2.color=[0.3,0,1];
+			
+			e= new Cuboid([0.5,+0.8,0.7],[0.8,1.75,0.11]);
+			e.rot=[0,90,0];
+			e.color=[0.3,0,1];
+			
+			g= new Cuboid([0.5,-0.7,0.7],[0.8,1.75,0.11]);
+			g.rot=[0,90,0];
+			g.color=[0.3,0,1];
+			
+			bone[2]= new Bone(1,[a,b,c1,c2,d1,d2,e,g]);
+
+			a = new Cuboid([0.5,0,0.9],[1,1,0.5]);
+			a.color = [0.7,0.7,0.5];
+			bone[3]=new Bone(1,[a]);
+		
+			a=new Cylinder([0.5,0,0],0.2,1.4);
+			a.color=[0.2,1,0];
+			b=new Cylinder([0.5,0,0.7],0.21,0.1);
+			b.color=[1,0,0];
+			c=new Cylinder([0.5,0,0.8],0.21,0.1);
+			c.color=[1,1,1];
+			d=new Cylinder([0.5,0,0.9],0.21,0.1);
+			d.color=[1,1,0];
+			bone[4]=new Bone(1,[a,b,c,d]);
+			
+			a=new Cylinder([0.50,-0.75,0.4],0.4,1.5);
+			a.rot=[0,90,0];
+			a.color=[0.4,0.4,0.4];
+			b=new Cylinder([0.5,0.76,0.4],0.41,0.1);
+			b.rot=[0,90,0];
+			b.color=[0.4,0.4,0.4];
+			
+		    c=new Cylinder([0.5,-0.76,0.4],0.41,0.1);
+			c.rot=[0,90,0];
+			c.color=[0.4,0.4,0.4];
+
+			d= new Cuboid([0.5,-0.7,1.25],[0.8,1.75,0.11]);
+			d.rot=[0,90,0];
+			d.color=[0.4,0.4,0.4];
+
+			e= new Cuboid([0.5,0.80,1.25],[0.8,1.75,0.11]);
+			e.rot=[0,90,0];
+			e.color=[0.4,0.4,0.4];
+
+			g= new Cuboid([0.5,0.1,2.1],[0.8,1.5,0.11]);
+			g.color=[0.4,0.4,0.4];
+
+			h=new Cylinder([0.5,0.1,2.11],0.4,1.5);
+			h.color=[0.4,0.4,0.4];
+
+			i=new Cylinder([0.5,0.1,3.62],0.41,0.1);
+			i.color=[1,0,0];
+
+            bone[5]=new Bone(1,[a,b,c,d,e,g,h,i]);
+			
+			a=new Cuboid([0.5,0.1,2.62],[0.7,0.3,0.3]);
+			a.color=[1,1,0];
+			a.rot=[45,0,0];
+
+			b=new Cuboid([0.5,0.1,2.62],[0.7,0.3,0.3]);
+			b.color=[1,1,0];
+			b.rot=[-45,0,0];
+
+			bone[6]=new Bone(1,[a,b]);
+
+		
+		}
+		var frame=0;
+        var time = now();
+		var oldTime = time;
+		function now() { return (new Date()).getTime()/1000; }
+		var dit=-1;
+		var bNo=-1;
+		var aNo=-1;
+		var alpha=[0,0,0,0,0,0];
+		var range=[180,70,120,120,180,160];
+		var k=0;
+		function drawFrame()
+		{
+			time=now();
+			var dTime=time-oldTime;
+			
+			oldTime=time;
+			gl.clear(gl.COLOR_BUFFER_BIT+gl.DEPTH_BUFFER_BIT);
+			frame++;
+			var a = 0.6+0.5*sin(time);
+			lookAt([13*cos(time),13*sin(time),20],[0,0,3],[0,0,3]);
+
+			// въртене на костите
+			
+
+			// рисуване на костите
+			/*if (aNo>=0)
+			{
+			alpha[aNo] += dTime;
+				bone[bNo].rot[dir] = range[aNo]*sin(alpha[aNo]);
+			}*/
+			pushMatrix();
+			var k=1;
+			bone[0].rot=[0,0,0];
+			bone[1].rot=[90,0,0];
+			bone[2].rot=[0,30*cos(time),0];
+			bone[3].rot=[5*cos(time),30*sin(2*time),0];
+			bone[4].rot=[10*cos(time),0,10*sin(2*time)];
+			bone[5].rot=[40*cos(time),0,60*sin(2*time)];
+			pushMatrix();
+			    base1.draw();
+				bone[0].draw();
+				bone[1].draw();
+				pushMatrix();
+				bone[2].draw();
+				bone[3].draw();
+				pushMatrix();
+				bone[4].draw();
+				pushMatrix();
+				bone[5].draw();
+				pushMatrix();
+				bone[6].draw();
+			popMatrix();
+			popMatrix();
+			popMatrix();
+			popMatrix();
+			popMatrix();
+
+			requestAnimationFrame(drawFrame);
+		}
+	</script>	
+</head>
+
+<body onload="start()">
+	<h2>Шарнирен робот</h2>
+
+	<noscript>
+		Искаме JavaScript, но няма!
+	</noscript>
+	
+	<canvas id="picasso" width="600" height="400" style="border: solid;">
+		Искаме canvas, но няма!
+	</canvas>
+</body>
